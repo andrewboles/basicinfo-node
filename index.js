@@ -1,33 +1,22 @@
-const http = require("http");
-const fs = require("fs");
-const url = require("url");
+const express = require('express')
+const app = express();
+const port = 8080;
+const path = require('path');
 
-let page404 = fs.readFileSync("404.html", (err, data) => {
-  if (err) throw err;
-  return data;
+app.get('/',(req, res)=>{
+  res.sendFile(path.join(__dirname, '/index.html'))
+})
+
+app.get('/*',(req, res)=>{
+  var options = {
+    root: path.join(__dirname)
+  };
+  var fileName = `/${req.url.substring(1)}.html`;
+  res.sendFile(fileName, options, function(err){
+    if (err){
+      res.sendFile(path.join(__dirname, '/404.html'))
+    }
+  });
 });
 
-http
-  .createServer((req, res) => {
-    let q = url.parse(req.url, true);
-    console.log(q)
-    let filename = `.${q.pathname}`;
-    if (filename === "./") {
-      filename = "./index.html";
-    } else {
-        filename = `${filename}.html`
-        console.log(filename)
-    } 
-
-    fs.readFile(filename, (err, data) => {
-      if (err) {
-        res.write(page404);
-        return res.end();
-      }
-
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.write(data);
-      return res.end();
-    });
-  })
-  .listen(8080);
+app.listen(port)
